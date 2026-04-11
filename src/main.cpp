@@ -27,23 +27,29 @@ void init() {
   close(logfile);
 }
 
-void draw() {
-  clear();
-
+void draw(Grid &grid) {
+  erase();
+  wnoutrefresh(stdscr);
+  grid.draw();
   doupdate();
 }
 
-void handle_input() {
+int handle_input() {
   int ch = getch();
   if (ch == 'q') {
+    return -1;
   } else if (ch == KEY_RIGHT || ch == 'l') {
   } else if (ch == KEY_LEFT || ch == 'h') {
   } else if (ch == KEY_UP || ch == 'k') {
   } else if (ch == KEY_DOWN || ch == 'j') {
   }
+
+  return 0;
 }
 
 int main(int argc, char *argv[]) {
+  init();
+
   GridParam gridinfo;
   gridinfo.grid_h = LINES - 3;
   gridinfo.grid_w = COLS;
@@ -54,19 +60,20 @@ int main(int argc, char *argv[]) {
 
   Grid grid(gridinfo);
 
-  init();
-
   time_t raw_time;
   time(&raw_time);
   struct tm local_time;
   localtime_r(&raw_time, &local_time);
+  debug_print_date("current date: ", local_time);
   grid.set_dates(local_time.tm_year, local_time.tm_mon);
   grid.debug_print();
 
-  // while (1) {
-  //   draw();
-  //   handle_input();
-  // }
+  while (1) {
+    draw(grid);
+    if (handle_input() == -1) {
+      break;
+    }
+  }
 
   endwin();
 }

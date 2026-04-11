@@ -4,7 +4,7 @@
 CellParam GridParam::get_cell_param(int cell_index) {
   int cellh = grid_h / grid_rows;
   int cellw = grid_w / grid_cols;
-  int celly = cell_index / grid_rows;
+  int celly = cell_index / grid_cols;
   int cellx = cell_index % grid_cols;
   int begy = grid_begy + celly * cellh;
   int begx = grid_begx + cellx * cellw;
@@ -29,12 +29,13 @@ int Grid::set_dates(int year, int month) {
   tm_info.tm_year = year;
   tm_info.tm_mon = month;
   tm_info.tm_mday = 1;
+  tm_info.tm_hour = 0;
+  tm_info.tm_min = 0;
+  tm_info.tm_sec = 0;
   if (mktime(&tm_info) == -1) {
     perror("mktime");
     return -1;
   }
-  int days_in_month = get_month_days(year, month);
-  int first_weekday = tm_info.tm_wday;
 
   struct tm tm_begin;
   memcpy(&tm_begin, &tm_info, sizeof tm_info);
@@ -56,8 +57,27 @@ int Grid::set_dates(int year, int month) {
 }
 
 void Grid::debug_print() {
+  char s[100];
   for (int i = 0; i < cells.size(); i++) {
-    log_printf("Cell %d: %d/%d/%d", i, cells[i].tm.tm_year, cells[i].tm.tm_mon,
-               cells[i].tm.tm_mday);
+    snprintf(s, sizeof s, "cell %d: ", i);
+    debug_print_date(s, cells[i].tm);
   }
 }
+
+void Grid::draw() {
+  log_printf("grid draw: drawing %lu cells", (unsigned long)cells.size());
+  for(int i = 0; i < (int)cells.size(); i++) {
+    cells[i].draw();
+  }
+}
+
+void Cell::draw() {
+  if (win == NULL) {
+    log_printf("cell draw: win is NULL for mday %d", tm.tm_mday);
+    return;
+  }
+  box(win, '|', '-');
+  mvwprintw(win, 1, 1, "%d", tm.tm_mday);
+  wnoutrefresh(win); 
+}
+

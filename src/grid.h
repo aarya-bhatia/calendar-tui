@@ -20,13 +20,12 @@ struct Cell {
 
   Cell(CellParam param) : param(param) { _init(); }
   void _init();
+  void draw();
 };
 
 class Grid {
   GridParam param;
   std::vector<Cell> cells;
-  int cell_h;
-  int cell_w;
 
 public:
   Grid(GridParam param) : param(param) { _init(); }
