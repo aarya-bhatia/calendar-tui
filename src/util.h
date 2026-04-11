@@ -6,6 +6,8 @@
     fprintf(stderr, "%s:%d: " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);      \
   } while (0)
 
+extern const char *DAY_NAMES[];
+extern const char *DAY_SHORTNAMES[];
 extern const char *MONTH_NAMES[];
 extern const int DAYS_NORMAL[];
 extern const int DAYS_LEAP[];

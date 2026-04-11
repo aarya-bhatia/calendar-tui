@@ -13,6 +13,11 @@ CellParam GridParam::get_cell_param(int cell_index) {
 }
 
 void Grid::_init() {
+  log_printf("%d LINES x %d COLS", LINES, COLS);
+  log_printf("Grid size: h:%d w:%d", param.grid_h, param.grid_w);
+  log_printf("%d rows x %d cols", param.grid_rows, param.grid_cols);
+  log_printf("Grid offset: y:%d x:%d", param.grid_begy, param.grid_begx);
+
   cells.reserve(param.grid_rows * param.grid_cols);
   for (int i = 0; i < param.grid_rows * param.grid_cols; i++) {
     cells.emplace_back(param.get_cell_param(i));

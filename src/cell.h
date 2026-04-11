@@ -12,6 +12,7 @@ struct Cell {
   WINDOW *win = NULL;
 
   Cell(CellParam param) : param(param) { _init(); }
+  ~Cell();
   void _init();
-  void draw(bool selected);
+  void draw(bool selected=false, bool greyed=false);
 };

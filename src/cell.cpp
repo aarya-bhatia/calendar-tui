@@ -10,14 +10,26 @@ void Cell::_init() {
   win = newwin(param.cell_h, param.cell_w, param.cell_begy, param.cell_begx);
 }
 
-void Cell::draw(bool selected = false) {
+Cell::~Cell() {
+  if (win) {
+    delwin(win);
+  }
+}
+
+void Cell::draw(bool selected, bool greyed) {
   if (win == NULL) {
     log_printf("cell draw: win is NULL for mday %d", tm.tm_mday);
     return;
   }
-  if(selected) wattron(win, COLOR_PAIR(1));
+  if (selected)
+    wattron(win, COLOR_PAIR(1));
+  if (greyed)
+    wattron(win, COLOR_PAIR(2));
   box(win, '|', '-');
   mvwprintw(win, 1, 1, "%d", tm.tm_mday);
-  if(selected) wattroff(win, COLOR_PAIR(1));
+  if (selected)
+    wattroff(win, COLOR_PAIR(1));
+  if (greyed)
+    wattroff(win, COLOR_PAIR(2));
   wnoutrefresh(win);
 }

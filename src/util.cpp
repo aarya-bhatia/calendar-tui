@@ -1,6 +1,11 @@
 #include "util.h"
 #include <time.h>
 
+const char *DAY_NAMES[7] = {"Sunday",   "Monday", "Tuesday", "Wednesday",
+                            "Thursday", "Friday", "Saturday"};
+
+const char *DAY_SHORTNAMES[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
 const char *MONTH_NAMES[12] = {"January",   "February", "March",    "April",
                                "May",       "June",     "July",     "August",
                                "September", "October",  "November", "December"};
