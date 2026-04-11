@@ -11,10 +11,10 @@ struct GridParam {
 };
 
 class Grid {
-  GridParam param;
   std::vector<Cell> cells;
 
 public:
+  GridParam param;
   Grid(GridParam param) : param(param) { _init(); }
   void _init();
   int set_dates(int year, int month);

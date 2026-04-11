@@ -82,8 +82,8 @@ void draw_title() {
   attroff(A_BOLD);
 }
 
-void draw_footer() {
-  mvprintw(LINES - 1, 0, "Date Selected: %04d/%02d/%02d",
+void draw_footer(int y) {
+  mvprintw(y, 0, "Date Selected: %04d/%02d/%02d",
            1900 + date_selected.tm_year, date_selected.tm_mon + 1,
            date_selected.tm_mday);
 }
@@ -92,7 +92,7 @@ void draw_weekday_names() {
   int cell_width = COLS / 7;
   for (int i = 0; i < 7; i++) {
     const char *name = DAY_SHORTNAMES[i];
-    mvprintw(2, i * cell_width, "%s", name);
+    mvprintw(3, i * cell_width, "%s", name);
   }
 }
 
@@ -103,7 +103,10 @@ void draw(Grid &grid) {
   draw_title();
   draw_weekday_names();
   grid.draw();
-  draw_footer();
+  
+  int y = grid.param.grid_begy + grid.param.grid_rows * (grid.param.grid_h/grid.param.grid_rows);
+  log_printf("footer line: %d", y);
+  draw_footer(y);
   wnoutrefresh(stdscr);
   doupdate();
 }
@@ -120,9 +123,9 @@ void recompute_grid() {
     delete grid;
   }
   GridParam gridinfo;
-  gridinfo.grid_h = LINES - 3;
+  gridinfo.grid_h = LINES - 5;
   gridinfo.grid_w = COLS;
-  gridinfo.grid_begy = 3;
+  gridinfo.grid_begy = 4;
   gridinfo.grid_begx = 0;
   gridinfo.grid_rows = 5;
   gridinfo.grid_cols = 7;
@@ -158,6 +161,8 @@ int main(int argc, char *argv[]) {
   while (1) {
     if (grid) {
       draw(*grid);
+    } else { 
+      break;
     }
     if (handle_input() == -1) {
       break;
