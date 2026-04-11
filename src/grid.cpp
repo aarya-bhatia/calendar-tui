@@ -1,4 +1,5 @@
 #include "grid.h"
+#include "cell.h"
 #include "util.h"
 
 CellParam GridParam::get_cell_param(int cell_index) {
@@ -9,11 +10,6 @@ CellParam GridParam::get_cell_param(int cell_index) {
   int begy = grid_begy + celly * cellh;
   int begx = grid_begx + cellx * cellw;
   return {cellh, cellw, begy, begx};
-}
-
-void Cell::_init() {
-  memset(&tm, 0, sizeof(struct tm));
-  win = newwin(param.cell_h, param.cell_w, param.cell_begy, param.cell_begx);
 }
 
 void Grid::_init() {
@@ -65,19 +61,16 @@ void Grid::debug_print() {
 }
 
 void Grid::draw() {
+  time_t raw_time;
+  time(&raw_time);
+  struct tm local_time;
+  localtime_r(&raw_time, &local_time);
+
   log_printf("grid draw: drawing %lu cells", (unsigned long)cells.size());
   for(int i = 0; i < (int)cells.size(); i++) {
-    cells[i].draw();
+    bool selected = (cells[i].tm.tm_mday == local_time.tm_mday &&
+                     cells[i].tm.tm_mon == local_time.tm_mon &&
+                     cells[i].tm.tm_year == local_time.tm_year);
+    cells[i].draw(selected);
   }
 }
-
-void Cell::draw() {
-  if (win == NULL) {
-    log_printf("cell draw: win is NULL for mday %d", tm.tm_mday);
-    return;
-  }
-  box(win, '|', '-');
-  mvwprintw(win, 1, 1, "%d", tm.tm_mday);
-  wnoutrefresh(win); 
-}
-
