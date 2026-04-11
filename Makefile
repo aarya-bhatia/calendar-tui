@@ -1,14 +1,15 @@
 all: main
 
-main: .obj/main.o
+SRC_FILES=$(shell find src -type f -name "*.cpp")
+SRC_OBJECTS=$(SRC_FILES:src/%=obj/%.o)
+
+main: $(SRC_OBJECTS)
 	g++ -lncurses -lm $^ -o $@
 
-.obj/main.o: main.cpp
-	mkdir -p .obj/
-	g++ -c -Wall -g -std=c++11 -MMD -MP $< -o $@
+obj/%.o: src/%
+	mkdir -p $(dir $@)
+	g++ -c -Wall -g -std=c++14 $< -o $@
 
 clean:
-	rm -rf .obj/ main
-
--include .obj/main.d%
+	rm -rf main obj/
 
