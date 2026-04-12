@@ -1,81 +1,94 @@
 #include "grid.h"
-#include "cell.h"
-#include "util.h"
+#include "calendar_state.h"
+#include <cstring>
 
-CellParam GridParam::get_cell_param(int cell_index) {
-  int cellh = grid_h / grid_rows;
-  int cellw = grid_w / grid_cols;
-  int celly = cell_index / grid_cols;
-  int cellx = cell_index % grid_cols;
-  int begy = grid_begy + celly * cellh;
-  int begx = grid_begx + cellx * cellw;
-  return {cellh, cellw, begy, begx};
-}
+GridSection::GridSection(int y, int h, int w, const CalendarState& state) : Section(y, h, w) {
+    int cell_h = h / 6;
+    int cell_w = w / 7;
 
-void Grid::_init() {
-  log_printf("%d LINES x %d COLS", LINES, COLS);
-  log_printf("Grid size: h:%d w:%d", param.grid_h, param.grid_w);
-  log_printf("%d rows x %d cols", param.grid_rows, param.grid_cols);
-  log_printf("Grid offset: y:%d x:%d", param.grid_begy, param.grid_begx);
-
-  cells.reserve(param.grid_rows * param.grid_cols);
-  for (int i = 0; i < param.grid_rows * param.grid_cols; i++) {
-    cells.emplace_back(param.get_cell_param(i));
-  }
-}
-
-int Grid::set_dates(int year, int month) {
-  struct tm tm_info; // first day of month
-  memset(&tm_info, 0, sizeof tm_info);
-  tm_info.tm_year = year;
-  tm_info.tm_mon = month;
-  tm_info.tm_mday = 1;
-  tm_info.tm_hour = 0;
-  tm_info.tm_min = 0;
-  tm_info.tm_sec = 0;
-  if (mktime(&tm_info) == -1) {
-    perror("mktime");
-    return -1;
-  }
-
-  struct tm tm_begin;
-  memcpy(&tm_begin, &tm_info, sizeof tm_info);
-  tm_begin.tm_mday -= tm_info.tm_wday;
-  if (mktime(&tm_begin) == -1) {
-    perror("mktime");
-    return -1;
-  }
-  for (int i = 0; i < cells.size(); i++) {
-    cells[i].tm = tm_begin;
-    tm_begin.tm_mday += 1;
-    if (mktime(&tm_begin) == -1) {
-      perror("mktime");
-      return -1;
+    for (int i = 0; i < 42; i++) {
+        int ry = i / 7;
+        int rx = i % 7;
+        cells.emplace_back(std::make_unique<Cell>(win, cell_h, cell_w, ry * cell_h, rx * cell_w));
     }
-  }
 
-  return 0;
+    // Initialize anchor_date based on state.selected
+    memcpy(&anchor_date, &state.selected, sizeof(struct tm));
+    anchor_date.tm_mday = 1;
+    anchor_date.tm_hour = 12;
+    anchor_date.tm_isdst = -1;
+    mktime(&anchor_date); // Normalize to get wday
+    
+    anchor_date.tm_mday -= anchor_date.tm_wday;
+    mktime(&anchor_date); // Anchor is now the Sunday before the 1st
+    
+    sync_dates(state);
 }
 
-void Grid::debug_print() {
-  char s[100];
-  for (int i = 0; i < cells.size(); i++) {
-    snprintf(s, sizeof s, "cell %d: ", i);
-    debug_print_date(s, cells[i].tm);
-  }
+void GridSection::sync_dates(const CalendarState& state) {
+    struct tm curr = anchor_date;
+    for (int i = 0; i < 42; i++) {
+        curr.tm_isdst = -1;
+        mktime(&curr);
+        cells[i]->date = curr;
+        curr.tm_mday++;
+    }
 }
 
-void Grid::draw() {
-  time_t raw_time;
-  time(&raw_time);
-  struct tm local_time;
-  localtime_r(&raw_time, &local_time);
+void GridSection::draw(const CalendarState& state) {
+    for (int i = 0; i < 42; i++) {
+        bool selected = (cells[i]->date.tm_mday == state.selected.tm_mday &&
+                        cells[i]->date.tm_mon == state.selected.tm_mon &&
+                        cells[i]->date.tm_year == state.selected.tm_year);
+        
+        bool today = (cells[i]->date.tm_mday == state.today.tm_mday &&
+                      cells[i]->date.tm_mon == state.today.tm_mon &&
+                      cells[i]->date.tm_year == state.today.tm_year);
 
-  log_printf("grid draw: drawing %lu cells", (unsigned long)cells.size());
-  for(int i = 0; i < (int)cells.size(); i++) {
-    bool selected = (cells[i].tm.tm_mday == local_time.tm_mday &&
-                     cells[i].tm.tm_mon == local_time.tm_mon &&
-                     cells[i].tm.tm_year == local_time.tm_year);
-    cells[i].draw(selected);
-  }
+        bool greyed = (cells[i]->date.tm_mon != state.selected.tm_mon);
+
+        cells[i]->draw(selected, today, greyed);
+    }
+    wnoutrefresh(win);
+}
+
+bool GridSection::handle_input(int ch, CalendarState& state) {
+    struct tm next = state.selected;
+    next.tm_hour = 12;
+    next.tm_isdst = -1;
+    bool moved = false;
+
+    if (ch == KEY_RIGHT || ch == 'l') {
+        next.tm_mday++; moved = true;
+    } else if (ch == KEY_LEFT || ch == 'h') {
+        next.tm_mday--; moved = true;
+    } else if (ch == KEY_UP || ch == 'k') {
+        next.tm_mday -= 7; moved = true;
+    } else if (ch == KEY_DOWN || ch == 'j') {
+        next.tm_mday += 7; moved = true;
+    }
+
+    if (moved) {
+        mktime(&next);
+        state.selected = next;
+
+        // Paged Scrolling Check
+        // If we moved off the current grid view, shift anchor by 42 days
+        time_t t_next = mktime(&next);
+        time_t t_start = mktime(&cells[0]->date);
+        time_t t_end = mktime(&cells[41]->date);
+
+        if (t_next < t_start) {
+            anchor_date.tm_mday -= 42;
+            mktime(&anchor_date);
+            sync_dates(state);
+        } else if (t_next > t_end) {
+            anchor_date.tm_mday += 42;
+            mktime(&anchor_date);
+            sync_dates(state);
+        }
+        return true;
+    }
+
+    return false;
 }

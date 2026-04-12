@@ -1,23 +1,18 @@
 #pragma once
-#include "util.h"
+#include "section.h"
 #include "cell.h"
-#include <ncurses.h>
-#include <time.h>
 #include <vector>
+#include <memory>
 
-struct GridParam {
-  int grid_h, grid_w, grid_rows, grid_cols, grid_begy, grid_begx;
-  CellParam get_cell_param(int cell_index);
-};
-
-class Grid {
-  std::vector<Cell> cells;
+class GridSection : public Section {
+    std::vector<std::unique_ptr<Cell>> cells;
+    struct tm anchor_date; // Always Sunday of the first row
 
 public:
-  GridParam param;
-  Grid(GridParam param) : param(param) { _init(); }
-  void _init();
-  int set_dates(int year, int month);
-  void draw();
-  void debug_print();
+    GridSection(int y, int h, int w, const CalendarState& state);
+    
+    void draw(const CalendarState& state) override;
+    bool handle_input(int ch, CalendarState& state) override;
+    
+    void sync_dates(const CalendarState& state);
 };
