@@ -4,11 +4,11 @@
 
 class Section {
 public:
-    WINDOW* win = nullptr;
-    int start_y, height, width;
+    WINDOW* win = NULL;
+    int start_y, start_x, height, width;
 
-    Section(int y, int h, int w) : start_y(y), height(h), width(w) {
-        win = newwin(h, w, y, 0);
+    Section(int y, int x, int h, int w) : start_y(y), start_x(x), height(h), width(w) {
+        win = newwin(h, w, y, x);
         keypad(win, TRUE);
     }
 

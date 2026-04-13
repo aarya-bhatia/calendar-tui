@@ -15,3 +15,5 @@ extern const int DAYS_LEAP[];
 int is_leap(int year);
 int get_month_days(int year, int monthz);
 void debug_print_date(const char *, struct tm &tm_info);
+
+enum Colors {Red=1, Blue, Green, Yellow};

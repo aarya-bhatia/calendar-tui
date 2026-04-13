@@ -2,7 +2,7 @@
 #include "calendar_state.h"
 #include <cstring>
 
-GridSection::GridSection(int y, int h, int w, const CalendarState& state) : Section(y, h, w) {
+GridSection::GridSection(int y, int x, int h, int w, const CalendarState& state) : Section(y, x, h, w) {
     int cell_h = h / 6;
     int cell_w = w / 7;
 

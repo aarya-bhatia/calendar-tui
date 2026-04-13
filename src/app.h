@@ -7,6 +7,7 @@
 class Application {
     CalendarState state;
     std::vector<std::unique_ptr<Section>> sections;
+    bool quit_signal = false;
 
 public:
     Application();

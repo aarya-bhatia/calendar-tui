@@ -6,7 +6,7 @@
 
 class FooterSection : public Section {
 public:
-    FooterSection(int y, int h, int w) : Section(y, h, w) {}
+    FooterSection(int y, int x, int h, int w) : Section(y, x, h, w) {}
 
     void draw(const CalendarState& state) override {
         werase(win);

@@ -9,7 +9,7 @@ class GridSection : public Section {
     struct tm anchor_date; // Always Sunday of the first row
 
 public:
-    GridSection(int y, int h, int w, const CalendarState& state);
+    GridSection(int y, int x, int h, int w, const CalendarState& state);
     
     void draw(const CalendarState& state) override;
     bool handle_input(int ch, CalendarState& state) override;
