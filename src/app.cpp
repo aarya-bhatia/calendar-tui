@@ -1,4 +1,5 @@
 #include "app.h"
+#include "event_section.h"
 #include "footer_section.h"
 #include "header_section.h"
 #include "table.h"
@@ -74,12 +75,17 @@ void Application::recompute_layout() {
 
   int header_h = 4;
   int footer_h = 1;
-  int table_h = LINES - header_h - footer_h;
+  int table_h = 14;
+  int events_h = LINES - header_h - table_h - footer_h;
+
   sections.push_back(new HeaderSection(0, 0, header_h, COLS));
   Section *table = new TableSection(header_h, 0, table_h, COLS / 2, state);
   sections.push_back(table);
-  sections.push_back(new FooterSection(*((TableSection *)table),
-                                       header_h + table_h, 0, footer_h, COLS));
+  // sections.push_back(new FooterSection(*((TableSection *)table),
+  //                                      header_h + table_h, 0, footer_h,
+  //                                      COLS));
+  sections.push_back(new EventSection(header_h + table_h, 0, events_h, COLS,
+                                      state, *(TableSection *)table));
 }
 
 void Application::run() {

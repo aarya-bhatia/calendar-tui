@@ -128,16 +128,21 @@ bool TableSection::handle_input(int ch, CalendarState &state) {
     update_selection(state.today, state);
     return true;
   }
+  bool handled = false;
 
   // navigation
   if (ch == KEY_RIGHT || ch == 'l') {
     selected_entry_index++;
+    handled = true;
   } else if (ch == KEY_LEFT || ch == 'h') {
     selected_entry_index--;
+    handled = true;
   } else if (ch == KEY_UP || ch == 'k') {
     selected_entry_index -= 7;
+    handled = true;
   } else if (ch == KEY_DOWN || ch == 'j') {
     selected_entry_index += 7;
+    handled = true;
   }
 
   if (selected_entry_index < 0) {
@@ -151,5 +156,6 @@ bool TableSection::handle_input(int ch, CalendarState &state) {
     mktime(&anchor_tm);
     state.set_view_next_month();
   }
-  return true;
+
+  return handled;
 }
