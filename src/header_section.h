@@ -16,10 +16,10 @@ public:
     mvwprintw(win, 0, 0, "[h] help  [arrows/hjkl] navigate  [q] quit");
     wattroff(win, COLOR_PAIR(1));
 
-    const char *month_name = MONTH_NAMES[state.view_month];
+    const char *month_name = MONTH_NAMES[state.first_day_of_view_month.tm_mon];
 
     wattron(win, A_BOLD);
-    mvwprintw(win, 2, 0, "%s %04d", month_name, 1900 + state.view_year);
+    mvwprintw(win, 2, 0, "%s %04d", month_name, 1900 + state.first_day_of_view_month.tm_year);
     wattroff(win, A_BOLD);
 
     wnoutrefresh(win);

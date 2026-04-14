@@ -8,7 +8,7 @@ main: $(SRC_OBJECTS)
 
 obj/%.o: src/%
 	mkdir -p $(dir $@)
-	g++ -c -Wall -g -std=c++14 $< -o $@
+	g++ -c -Wall -g -std=c++14 -O2 $< -o $@
 
 clean:
 	rm -rf main obj/

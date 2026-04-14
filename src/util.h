@@ -12,6 +12,8 @@ extern const char *MONTH_NAMES[];
 extern const int DAYS_NORMAL[];
 extern const int DAYS_LEAP[];
 
+const int SECONDS_IN_DAY = 86400;
+
 int is_leap(int year);
 int get_month_days(int year, int monthz);
 void debug_print_date(const char *, struct tm &tm_info);

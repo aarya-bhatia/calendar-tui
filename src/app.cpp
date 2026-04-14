@@ -22,7 +22,13 @@ Application::Application() {
   recompute_layout();
 }
 
-Application::~Application() { endwin(); }
+Application::~Application() {
+  for (Section *section : sections) {
+    delete section;
+  }
+  sections.clear();
+  endwin();
+}
 
 void Application::init_ncurses() {
   initscr();
@@ -49,22 +55,14 @@ void Application::init_ncurses() {
 }
 
 void Application::init_state() {
-  time_t raw;
-  time(&raw);
-  memset(&state.today, 0, sizeof state.today);
-  localtime_r(&raw, &state.today);
-  state.selected = state.today;
-  int res = mktime(&state.selected);
-  assert(res != -1);
-
-  state.view_year = state.selected.tm_year;
-  state.view_month = state.selected.tm_mon;
-
-  log_printf("today is %d/%d/%d", 1900 + state.selected.tm_year,
-             state.selected.tm_mon, state.selected.tm_mday);
+  state.refresh_today_date();
+  state.update_view_date(state.today);
 }
 
 void Application::recompute_layout() {
+  for (Section *section : sections) {
+    delete section;
+  }
   sections.clear();
   erase();
   refresh();
@@ -77,11 +75,11 @@ void Application::recompute_layout() {
   int header_h = 4;
   int footer_h = 1;
   int table_h = LINES - header_h - footer_h;
-  sections.push_back(std::make_unique<HeaderSection>(0, 0, header_h, COLS));
-  sections.push_back(
-      std::make_unique<TableSection>(header_h, 0, table_h, COLS / 2, state));
-  sections.push_back(
-      std::make_unique<FooterSection>(header_h + table_h, 0, footer_h, COLS));
+  sections.push_back(new HeaderSection(0, 0, header_h, COLS));
+  Section *table = new TableSection(header_h, 0, table_h, COLS / 2, state);
+  sections.push_back(table);
+  sections.push_back(new FooterSection(*((TableSection *)table),
+                                       header_h + table_h, 0, footer_h, COLS));
 }
 
 void Application::run() {

@@ -9,7 +9,11 @@ class TableSection : public Section {
   int selected_entry_index = 0;
   int cellh, cellw;
 
-  int get_today_entry_index(const struct tm &today);
+  int get_today_entry_index(struct tm today);
+  int get_entry_index(struct tm date);
+  struct tm get_anchor_date(int view_year, int view_month);
+  struct tm get_entry_date(int index);
+  void update_selection(struct tm new_selection_date, CalendarState &state);
 
 public:
   static const int NUM_ROWS = 6;
@@ -26,4 +30,6 @@ public:
 
   void draw(const CalendarState &state) override;
   bool handle_input(int ch, CalendarState &state) override;
+
+  struct tm get_selected_date() const;
 };

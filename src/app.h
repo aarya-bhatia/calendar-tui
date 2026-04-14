@@ -1,12 +1,11 @@
 #pragma once
 #include <vector>
-#include <memory>
 #include "calendar_state.h"
 #include "section.h"
 
 class Application {
     CalendarState state;
-    std::vector<std::unique_ptr<Section>> sections;
+    std::vector<Section *> sections;
     bool quit_signal = false;
 
 public:

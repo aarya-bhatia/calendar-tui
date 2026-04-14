@@ -18,32 +18,60 @@ TableSection::TableSection(int y, int x, int h, int w,
   assert(cellh >= 1);
   assert(cellw >= 1);
 
-  memset(&anchor_tm, 0, sizeof anchor_tm);
-  anchor_tm.tm_year = state.view_year;
-  anchor_tm.tm_mon = state.view_month;
-  anchor_tm.tm_mday = 1;
-  anchor_tm.tm_isdst = -1;
-  mktime(&anchor_tm);
-
-  anchor_tm.tm_mday -= anchor_tm.tm_wday;
-  mktime(&anchor_tm);
-
+  anchor_tm = get_anchor_date(state.first_day_of_view_month.tm_year,
+                              state.first_day_of_view_month.tm_mon);
+  debug_print_date("anchor date: ", anchor_tm);
   selected_entry_index = get_today_entry_index(state.today);
+  log_printf("initial selected entry: %d", selected_entry_index);
 }
 
-int TableSection::get_today_entry_index(const struct tm &today) {
-  for (int r = 0; r < NUM_ROWS; r++) {
-    for (int c = 0; c < NUM_COLS; c++) {
-      struct tm entry_date = anchor_tm;
-      entry_date.tm_mday += (r * NUM_COLS + c);
-      mktime(&entry_date);
-      if (date_equals(entry_date, today)) {
-        return r * NUM_COLS + c;
-      }
-    }
+void TableSection::update_selection(struct tm new_selection_date,
+                                    CalendarState &state) {
+  struct tm new_anchor =
+      get_anchor_date(new_selection_date.tm_year, new_selection_date.tm_mon);
+  // check if anchor has changed.
+  if (new_anchor.tm_year != anchor_tm.tm_year ||
+      new_anchor.tm_mon != anchor_tm.tm_mon) {
+    anchor_tm = new_anchor;
+    state.update_view_date(new_selection_date);
   }
 
-  return -1;
+  this->selected_entry_index = get_entry_index(new_selection_date);
+}
+
+int TableSection::get_entry_index(struct tm date) {
+  time_t t1 = mktime(&anchor_tm);
+  time_t t2 = mktime(&date);
+  return abs(t2 - t1) / SECONDS_IN_DAY;
+}
+
+struct tm TableSection::get_entry_date(int index) {
+  struct tm entry_date = anchor_tm;
+  entry_date.tm_mday += index;
+  mktime(&entry_date);
+  return entry_date;
+}
+
+struct tm TableSection::get_anchor_date(int view_year, int view_month) {
+  struct tm t;
+  memset(&t, 0, sizeof t);
+
+  t.tm_year = view_year;
+  t.tm_mon = view_month;
+  t.tm_mday = 1;
+  t.tm_isdst = -1;
+  mktime(&t);
+
+  t.tm_mday -= t.tm_wday;
+  mktime(&t);
+
+  return t;
+}
+
+int TableSection::get_today_entry_index(struct tm today) {
+  time_t t1 = mktime(&anchor_tm);
+  time_t t2 = mktime(&today);
+  return abs(t2 - t1) / SECONDS_IN_DAY;
 }
 
 void TableSection::draw(const CalendarState &state) {
@@ -55,17 +83,17 @@ void TableSection::draw(const CalendarState &state) {
 
   for (int r = 0; r < NUM_ROWS; r++) {
     for (int c = 0; c < NUM_COLS; c++) {
-      struct tm entry_date = anchor_tm;
-      entry_date.tm_mday += (r * NUM_COLS + c);
-      mktime(&entry_date);
+      int entry_index = r * NUM_COLS + c;
+      struct tm entry_date = get_entry_date(entry_index);
       int entry_y = cellh * (r + 1);
       int entry_x = cellw * c;
 
-      if (date_equals(entry_date, state.selected) && date_equals(entry_date, state.today)) {
+      if (entry_index == selected_entry_index &&
+          date_equals(entry_date, state.today)) {
         wattron(win, attr_selected_entry | A_UNDERLINE);
         mvwprintw(win, entry_y, entry_x, "%d", entry_date.tm_mday);
         wattroff(win, attr_selected_entry | A_UNDERLINE);
-      } else if (date_equals(entry_date, state.selected)) {
+      } else if (entry_index == selected_entry_index) {
         wattron(win, attr_selected_entry);
         mvwprintw(win, entry_y, entry_x, "%d", entry_date.tm_mday);
         wattroff(win, attr_selected_entry);
@@ -73,7 +101,7 @@ void TableSection::draw(const CalendarState &state) {
         wattron(win, attr_today_entry);
         mvwprintw(win, entry_y, entry_x, "%d", entry_date.tm_mday);
         wattroff(win, attr_today_entry);
-      } else if (entry_date.tm_mon != state.view_month) {
+      } else if (entry_date.tm_mon != state.first_day_of_view_month.tm_mon) {
         wattron(win, attr_outside_month_entry);
         mvwprintw(win, entry_y, entry_x, "%d", entry_date.tm_mday);
         wattroff(win, attr_outside_month_entry);
@@ -85,38 +113,43 @@ void TableSection::draw(const CalendarState &state) {
   wnoutrefresh(win);
 }
 
+struct tm TableSection::get_selected_date() const {
+  struct tm t = anchor_tm;
+  t.tm_mday += selected_entry_index;
+  mktime(&t);
+  debug_print_date("TableSection:: Selected date: ", t);
+  log_printf("entry index: %d", selected_entry_index);
+  return t;
+}
+
 bool TableSection::handle_input(int ch, CalendarState &state) {
+  // jump to today
+  if (ch == 't') {
+    update_selection(state.today, state);
+    return true;
+  }
+
+  // navigation
   if (ch == KEY_RIGHT || ch == 'l') {
     selected_entry_index++;
-    state.selected.tm_mday += 1;
   } else if (ch == KEY_LEFT || ch == 'h') {
     selected_entry_index--;
-    state.selected.tm_mday -= 1;
   } else if (ch == KEY_UP || ch == 'k') {
     selected_entry_index -= 7;
-    state.selected.tm_mday -= 7;
   } else if (ch == KEY_DOWN || ch == 'j') {
     selected_entry_index += 7;
-    state.selected.tm_mday += 7;
   }
-  mktime(&state.selected);
+
   if (selected_entry_index < 0) {
-    selected_entry_index += 42;
-    anchor_tm.tm_mday -= 42;
+    selected_entry_index += NUM_ENTRIES;
+    anchor_tm.tm_mday -= NUM_ENTRIES;
     mktime(&anchor_tm);
-    state.view_month--;
-    if (state.view_month < 0) {
-      state.view_year--;
-      state.view_month += 12;
-    }
-  } else if (selected_entry_index >= 42) {
-    selected_entry_index -= 42;
-    anchor_tm.tm_mday += 42;
+    state.set_view_prev_month();
+  } else if (selected_entry_index >= NUM_ENTRIES) {
+    selected_entry_index -= NUM_ENTRIES;
+    anchor_tm.tm_mday += NUM_ENTRIES;
     mktime(&anchor_tm);
-    state.view_month++;
-    if (state.view_month >= 12) {
-      state.view_year++;
-      state.view_month -= 12; }
+    state.set_view_next_month();
   }
   return true;
 }
