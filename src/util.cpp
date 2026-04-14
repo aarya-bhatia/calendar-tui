@@ -4,7 +4,8 @@
 const char *DAY_NAMES[7] = {"Sunday",   "Monday", "Tuesday", "Wednesday",
                             "Thursday", "Friday", "Saturday"};
 
-const char *DAY_SHORTNAMES[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+const char *DAY_SHORTNAMES[7] = {"Sun", "Mon", "Tue", "Wed",
+                                 "Thu", "Fri", "Sat"};
 
 const char *MONTH_NAMES[12] = {"January",   "February", "March",    "April",
                                "May",       "June",     "July",     "August",
@@ -23,4 +24,9 @@ int get_month_days(int year, int monthz) {
 void debug_print_date(const char *msg, struct tm &t) {
   log_printf("%s: %04d-%02d-%02d %02d:%02d:%02d", msg, t.tm_year + 1900,
              t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+}
+
+bool date_equals(struct tm t1, struct tm t2) {
+  return t1.tm_year == t2.tm_year && t1.tm_mon == t2.tm_mon &&
+         t1.tm_mday == t2.tm_mday;
 }

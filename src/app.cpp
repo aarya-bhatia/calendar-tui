@@ -69,8 +69,7 @@ void Application::recompute_layout() {
   erase();
   refresh();
 
-  if (LINES < MIN_LINES || COLS < MIN_COLS)
-  {
+  if (LINES < MIN_LINES || COLS < MIN_COLS) {
     quit_signal = true;
     return;
   }

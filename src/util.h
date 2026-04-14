@@ -16,4 +16,6 @@ int is_leap(int year);
 int get_month_days(int year, int monthz);
 void debug_print_date(const char *, struct tm &tm_info);
 
-enum Colors {Red=1, Blue, Green, Yellow};
+enum Colors { Red = 1, Blue, Green, Yellow };
+
+bool date_equals(struct tm t1, struct tm t2);
