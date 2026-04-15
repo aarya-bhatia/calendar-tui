@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <string>
 
 #define log_puts(s)                                                            \
   do {                                                                         \
@@ -26,3 +27,7 @@ void debug_print_date(const char *, struct tm &tm_info);
 enum Colors { Red = 1, Blue, Green, Yellow };
 
 bool date_equals(struct tm t1, struct tm t2);
+
+extern const char *NOTIFICATION_ENDPOINT_URL;
+
+bool push_notification(const std::string &message);

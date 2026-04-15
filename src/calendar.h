@@ -4,7 +4,7 @@
 #include "util.h"
 #include <ncurses.h>
 
-class TableSection : public Section {
+class Calendar : public Section {
   struct tm anchor_tm;
   int selected_entry_index = 0;
   int cellh, cellw;
@@ -26,7 +26,7 @@ public:
       COLOR_PAIR(Colors::Red) | A_UNDERLINE;
   static const unsigned int attr_outside_month_entry = COLOR_PAIR(Colors::Blue);
 
-  TableSection(int y, int x, int h, int w, const CalendarState &state);
+  Calendar(int y, int x, int h, int w, const CalendarState &state);
 
   void draw(const CalendarState &state) override;
   bool handle_input(int ch, CalendarState &state) override;

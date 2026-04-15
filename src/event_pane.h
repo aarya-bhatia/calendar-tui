@@ -1,12 +1,12 @@
 #include "section.h"
-#include "table.h"
+#include "calendar.h"
 #include "util.h"
 #include <algorithm>
 #include <map>
 #include <time.h>
 #include <vector>
 
-class EventSection : public Section {
+class EventPane : public Section {
 
   struct Event {
     int id;
@@ -15,7 +15,7 @@ class EventSection : public Section {
     Event(int id, const std::string &s) : id(id), description(s) {}
   };
 
-  TableSection &table;
+  Calendar &table;
   std::map<long, std::vector<Event>> events;
 
   static long get_map_key(struct tm &date) {
@@ -29,8 +29,8 @@ class EventSection : public Section {
   }
 
 public:
-  EventSection(int y, int x, int h, int w, const CalendarState &state,
-               TableSection &table)
+  EventPane(int y, int x, int h, int w, const CalendarState &state,
+               Calendar &table)
       : Section(y, x, h, w), table(table) {}
 
   void draw(const CalendarState &state) override {

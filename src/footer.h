@@ -1,15 +1,15 @@
 #pragma once
 #include "section.h"
-#include "table.h"
+#include "calendar.h"
 #include <ctime>
 
 #define FOOTER_COLOR 3
 
-class FooterSection : public Section {
-  TableSection &table;
+class Footer : public Section {
+  Calendar &table;
 
 public:
-  FooterSection(TableSection &table, int y, int x, int h, int w)
+  Footer(Calendar &table, int y, int x, int h, int w)
       : Section(y, x, h, w), table(table) {}
 
   void draw(const CalendarState &state) override {

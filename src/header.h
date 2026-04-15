@@ -5,9 +5,9 @@
 #include <ctime>
 #include <string>
 
-class HeaderSection : public Section {
+class Header : public Section {
 public:
-  HeaderSection(int y, int x, int h, int w) : Section(y, x, h, w) {}
+  Header(int y, int x, int h, int w) : Section(y, x, h, w) {}
 
   void draw(const CalendarState &state) override {
     werase(win);

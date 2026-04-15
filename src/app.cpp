@@ -1,8 +1,8 @@
 #include "app.h"
-#include "event_section.h"
-#include "footer_section.h"
-#include "header_section.h"
-#include "table.h"
+#include "event_pane.h"
+#include "header.h"
+#include "calendar.h"
+#include "footer.h"
 #include "util.h"
 #include <assert.h>
 #include <fcntl.h>
@@ -79,14 +79,14 @@ void Application::recompute_layout() {
   int table_h = 14;
   int events_h = LINES - header_h - table_h - footer_h;
 
-  sections.push_back(new HeaderSection(0, 0, header_h, COLS));
-  Section *table = new TableSection(header_h, 0, table_h, COLS / 2, state);
+  sections.push_back(new Header(0, 0, header_h, COLS));
+  Section *table = new Calendar(header_h, 0, table_h, COLS / 2, state);
   sections.push_back(table);
-  // sections.push_back(new FooterSection(*((TableSection *)table),
-  //                                      header_h + table_h, 0, footer_h,
-  //                                      COLS));
-  sections.push_back(new EventSection(header_h + table_h, 0, events_h, COLS,
-                                      state, *(TableSection *)table));
+  sections.push_back(new Footer(*((Calendar *)table),
+                                       header_h + table_h, 0, footer_h,
+                                       COLS));
+  sections.push_back(new EventPane(header_h + table_h, 0, events_h, COLS,
+                                      state, *(Calendar *)table));
 }
 
 void Application::run() {

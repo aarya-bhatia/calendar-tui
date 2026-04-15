@@ -1,11 +1,11 @@
-#include "table.h"
+#include "calendar.h"
 #include "util.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-TableSection::TableSection(int y, int x, int h, int w,
+Calendar::Calendar(int y, int x, int h, int w,
                            const CalendarState &state)
     : Section(y, x, h, w) {
 
@@ -25,7 +25,7 @@ TableSection::TableSection(int y, int x, int h, int w,
   log_printf("initial selected entry: %d", selected_entry_index);
 }
 
-void TableSection::update_selection(struct tm new_selection_date,
+void Calendar::update_selection(struct tm new_selection_date,
                                     CalendarState &state) {
   struct tm new_anchor =
       get_anchor_date(new_selection_date.tm_year, new_selection_date.tm_mon);
@@ -39,20 +39,20 @@ void TableSection::update_selection(struct tm new_selection_date,
   this->selected_entry_index = get_entry_index(new_selection_date);
 }
 
-int TableSection::get_entry_index(struct tm date) {
+int Calendar::get_entry_index(struct tm date) {
   time_t t1 = mktime(&anchor_tm);
   time_t t2 = mktime(&date);
   return abs(t2 - t1) / SECONDS_IN_DAY;
 }
 
-struct tm TableSection::get_entry_date(int index) {
+struct tm Calendar::get_entry_date(int index) {
   struct tm entry_date = anchor_tm;
   entry_date.tm_mday += index;
   mktime(&entry_date);
   return entry_date;
 }
 
-struct tm TableSection::get_anchor_date(int view_year, int view_month) {
+struct tm Calendar::get_anchor_date(int view_year, int view_month) {
   struct tm t;
   memset(&t, 0, sizeof t);
 
@@ -68,13 +68,13 @@ struct tm TableSection::get_anchor_date(int view_year, int view_month) {
   return t;
 }
 
-int TableSection::get_today_entry_index(struct tm today) {
+int Calendar::get_today_entry_index(struct tm today) {
   time_t t1 = mktime(&anchor_tm);
   time_t t2 = mktime(&today);
   return abs(t2 - t1) / SECONDS_IN_DAY;
 }
 
-void TableSection::draw(const CalendarState &state) {
+void Calendar::draw(const CalendarState &state) {
   werase(win);
 
   for (int c = 0; c < NUM_COLS; c++) {
@@ -113,16 +113,16 @@ void TableSection::draw(const CalendarState &state) {
   wnoutrefresh(win);
 }
 
-struct tm TableSection::get_selected_date() const {
+struct tm Calendar::get_selected_date() const {
   struct tm t = anchor_tm;
   t.tm_mday += selected_entry_index;
   mktime(&t);
-  debug_print_date("TableSection:: Selected date: ", t);
+  debug_print_date("Calendar:: Selected date: ", t);
   log_printf("entry index: %d", selected_entry_index);
   return t;
 }
 
-bool TableSection::handle_input(int ch, CalendarState &state) {
+bool Calendar::handle_input(int ch, CalendarState &state) {
   // jump to today
   if (ch == 't') {
     update_selection(state.today, state);
