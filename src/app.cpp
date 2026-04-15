@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 #define LOG_FILENAME "app.log"
-#define MIN_LINES 10
-#define MIN_COLS 20
+#define MIN_LINES 20
+#define MIN_COLS 50
 
 #define SELECTION_COLOR 1
 #define OTHER_MONTH_COLOR 2
@@ -69,6 +69,7 @@ void Application::recompute_layout() {
   refresh();
 
   if (LINES < MIN_LINES || COLS < MIN_COLS) {
+    log_printf("screen is too small (min: %d x %d)", MIN_LINES, MIN_COLS);
     quit_signal = true;
     return;
   }

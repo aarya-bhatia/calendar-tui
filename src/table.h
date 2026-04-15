@@ -19,7 +19,7 @@ public:
   static const int NUM_ROWS = 6;
   static const int NUM_COLS = 7;
   static const int NUM_ENTRIES = NUM_ROWS * NUM_COLS;
-
+  
   static const unsigned int attr_selected_entry =
       COLOR_PAIR(Colors::Yellow) | A_BOLD;
   static const unsigned int attr_today_entry =

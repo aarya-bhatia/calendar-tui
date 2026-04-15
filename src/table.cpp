@@ -12,8 +12,8 @@ TableSection::TableSection(int y, int x, int h, int w,
   cellh = h / (1 + NUM_ROWS);
   cellw = w / NUM_COLS;
 
-  cellh = 2;
-  cellw = 6;
+  // cellh = 2;
+  // cellw = 6;
 
   assert(cellh >= 1);
   assert(cellw >= 1);
