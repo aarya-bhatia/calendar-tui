@@ -1,21 +1,26 @@
 #pragma once
+
+#include "view.h"
+#include <memory>
+#include <ncurses.h>
+#include <stdio.h>
+#include <typeinfo>
 #include <vector>
-#include "calendar_state.h"
-#include "section.h"
+
+#define LOG_FILENAME "app.log"
+#define MIN_LINES 20
+#define MIN_COLS 50
 
 class Application {
-    CalendarState state;
-    std::vector<Section *> sections;
-    bool quit_signal = false;
+  AppState state;
+  std::vector<std::unique_ptr<View>> views;
 
 public:
-    Application();
-    ~Application();
+  Application();
+  ~Application();
 
-    void run();
+  void run();
 
 private:
-    void init_ncurses();
-    void init_state();
-    void recompute_layout();
+  void recompute_layout();
 };

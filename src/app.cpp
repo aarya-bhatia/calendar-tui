@@ -1,37 +1,14 @@
 #include "app.h"
-#include "event_pane.h"
-#include "header.h"
-#include "calendar.h"
-#include "footer.h"
 #include "util.h"
-#include <assert.h>
+#include "view.h"
 #include <fcntl.h>
+#include <memory.h>
 #include <ncurses.h>
+#include <stdio.h>
 #include <unistd.h>
 
-#define LOG_FILENAME "app.log"
-#define MIN_LINES 20
-#define MIN_COLS 50
-
-#define SELECTION_COLOR 1
-#define OTHER_MONTH_COLOR 2
-#define FOOTER_COLOR 3
-
 Application::Application() {
-  init_ncurses();
-  init_state();
-  recompute_layout();
-}
-
-Application::~Application() {
-  for (Section *section : sections) {
-    delete section;
-  }
-  sections.clear();
-  endwin();
-}
-
-void Application::init_ncurses() {
+  setlocale(LC_ALL, "");
   initscr();
   cbreak();
   noecho();
@@ -55,22 +32,16 @@ void Application::init_ncurses() {
   close(logfile);
 }
 
-void Application::init_state() {
-  state.refresh_today_date();
-  state.update_view_date(state.today);
-}
+Application::~Application() { endwin(); }
 
 void Application::recompute_layout() {
-  for (Section *section : sections) {
-    delete section;
-  }
-  sections.clear();
+  views.clear();
   erase();
   refresh();
 
   if (LINES < MIN_LINES || COLS < MIN_COLS) {
     log_printf("screen is too small (min: %d x %d)", MIN_LINES, MIN_COLS);
-    quit_signal = true;
+    state.quit();
     return;
   }
 
@@ -79,34 +50,59 @@ void Application::recompute_layout() {
   int table_h = 14;
   int events_h = LINES - header_h - table_h - footer_h;
 
-  sections.push_back(new Header(0, 0, header_h, COLS));
-  Section *table = new Calendar(header_h, 0, table_h, COLS / 2, state);
-  sections.push_back(table);
-  sections.push_back(new Footer(*((Calendar *)table),
-                                       header_h + table_h, 0, footer_h,
-                                       COLS));
-  sections.push_back(new EventPane(header_h + table_h, 0, events_h, COLS,
-                                      state, *(Calendar *)table));
+  views.push_back(std::make_unique<HeaderView>(0, 0, header_h, COLS));
+  views.push_back(
+      std::make_unique<CalendarView>(header_h, 0, table_h, COLS / 2));
+  views.push_back(
+      std::make_unique<EventView>(header_h + table_h, 0, events_h, COLS));
+  views.push_back(std::make_unique<FooterView>(header_h + table_h + events_h, 0,
+                                               footer_h, COLS));
 }
 
 void Application::run() {
-  while (!quit_signal) {
-    for (auto &s : sections) {
-      s->draw(state);
+  if (views.empty())
+    recompute_layout();
+  while (state.is_running()) {
+    for (auto &view : views) {
+      view->render(state);
     }
     doupdate();
-
     int ch = getch();
-    if (ch == 'q') {
-      quit_signal = true;
-      continue;
-    } else if (ch == KEY_RESIZE) {
+    if (ch == KEY_RESIZE) {
       recompute_layout();
       continue;
+    } else if (ch == KEY_F(1)) {
+      return; // exit
     }
 
-    for (auto &s : sections) {
-      if (s->handle_input(ch, state)) {
+    if (state.is_typing()) {
+      // Handle typing
+    } else {
+      switch (ch) {
+      case 't':
+        state.jump_to_date(state.get_today());
+        break;
+      case KEY_UP:
+      case 'k':
+        state.move(AppState::TOP);
+        break;
+      case KEY_DOWN:
+      case 'j':
+        state.move(AppState::BOTTOM);
+        break;
+      case KEY_LEFT:
+      case 'h':
+        state.move(AppState::LEFT);
+        break;
+      case KEY_RIGHT:
+      case 'l':
+        state.move(AppState::RIGHT);
+        break;
+      case 'q':
+        state.quit();
+        break;
+      case 'a':
+        state.insert_event("New Event");
         break;
       }
     }

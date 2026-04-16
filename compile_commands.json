@@ -1,0 +1,82 @@
+[
+  {
+    "file": "src/util.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-g",
+      "-std=c++14",
+      "-O1",
+      "src/util.cpp",
+      "-o",
+      "obj/util.cpp.o"
+    ],
+    "directory": "/Users/aaryabhatia/Coding/calendar-tui",
+    "output": "obj/util.cpp.o"
+  },
+  {
+    "file": "src/view.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-g",
+      "-std=c++14",
+      "-O1",
+      "src/view.cpp",
+      "-o",
+      "obj/view.cpp.o"
+    ],
+    "directory": "/Users/aaryabhatia/Coding/calendar-tui",
+    "output": "obj/view.cpp.o"
+  },
+  {
+    "file": "src/app_state.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-g",
+      "-std=c++14",
+      "-O1",
+      "src/app_state.cpp",
+      "-o",
+      "obj/app_state.cpp.o"
+    ],
+    "directory": "/Users/aaryabhatia/Coding/calendar-tui",
+    "output": "obj/app_state.cpp.o"
+  },
+  {
+    "file": "src/main.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-g",
+      "-std=c++14",
+      "-O1",
+      "src/main.cpp",
+      "-o",
+      "obj/main.cpp.o"
+    ],
+    "directory": "/Users/aaryabhatia/Coding/calendar-tui",
+    "output": "obj/main.cpp.o"
+  },
+  {
+    "file": "src/app.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-g",
+      "-std=c++14",
+      "-O1",
+      "src/app.cpp",
+      "-o",
+      "obj/app.cpp.o"
+    ],
+    "directory": "/Users/aaryabhatia/Coding/calendar-tui",
+    "output": "obj/app.cpp.o"
+  }
+]
