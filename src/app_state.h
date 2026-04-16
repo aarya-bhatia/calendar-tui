@@ -10,16 +10,31 @@ struct AppState {
   AppState();
   ~AppState();
 
+  void set_typing_on() { 
+    typing_buffer = "";
+    typing = true; 
+  }
+
+  void set_typing_off() { 
+    typing = false; 
+    if(!typing_buffer.empty()) {
+      add_event(get_selected_date(), typing_buffer);
+    }
+  }
+
+  bool is_typing() const { return typing; }
+
   // Public Action API
   enum MoveDir { LEFT, RIGHT, TOP, BOTTOM };
   void move(MoveDir dir);
   void jump_to_date(struct tm date);
   void insert_event(const std::string& description);
   void quit() { running = false; }
+  void view_prev_month_with_same_selection();
+  void view_next_month_with_same_selection();
 
   // Read-only state access for View
   bool is_running() const { return running; }
-  bool is_typing() const { return typing; }
   struct tm get_view_month() const { return first_day_of_view_month; }
   struct tm get_today() const { return today; }
   int get_selected_index() const { return selected_entry_index; }
@@ -42,13 +57,18 @@ struct AppState {
   struct tm get_entry_date(int index) const;
   struct tm get_selected_date() const;
 
+  std::string typing_buffer = "";
+  int selected_entry_index = 0;
+
+  void update_selection(struct tm new_selection_date);
+
 private:
   bool typing = false;
+
   bool running = true;
   struct tm first_day_of_view_month;
   struct tm today;
   struct tm anchor_tm;
-  int selected_entry_index = 0;
 
   std::map<long, std::vector<Event>> events;
 
@@ -57,7 +77,6 @@ private:
   void update_view_date(struct tm day_in_view_month);
   void set_view_prev_month();
   void set_view_next_month();
-  void update_selection(struct tm new_selection_date);
   
   int get_today_entry_index(struct tm today) const;
   int get_entry_index(struct tm date) const;

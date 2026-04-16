@@ -48,6 +48,18 @@ void AppState::insert_event(const std::string &description) {
   add_event(get_selected_date(), description);
 }
 
+void AppState::view_prev_month_with_same_selection() {
+  anchor_tm.tm_mon--;
+  mktime(&anchor_tm);
+  set_view_prev_month();
+}
+
+void AppState::view_next_month_with_same_selection() {
+  anchor_tm.tm_mon++;
+  mktime(&anchor_tm);
+  set_view_next_month();
+}
+
 void AppState::update_selection(struct tm new_selection_date) {
   struct tm new_anchor =
       get_anchor_date(new_selection_date.tm_year, new_selection_date.tm_mon);

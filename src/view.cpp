@@ -2,6 +2,7 @@
 #include "view.h"
 #include "app_state.h"
 #include <assert.h>
+#include <ncurses.h>
 
 CalendarView::CalendarView(int y, int x, int h, int w) : View(y, x, h, w) {
   cellh = h / (1 + AppState::CALENDAR_NUM_ROWS);
@@ -76,7 +77,7 @@ void HeaderView::render(const AppState &state) {
   werase(win);
 
   wattron(win, COLOR_PAIR(1));
-  mvwprintw(win, 0, 0, "[h] help  [arrows/hjkl] navigate  [q] quit");
+  mvwprintw(win, 0, 0, "[h] help [hjklHJKL] navigate [q] quit [t] go to today");
   wattroff(win, COLOR_PAIR(1));
 
   const char *month_name = MONTH_NAMES[state.get_view_month().tm_mon];
@@ -91,11 +92,21 @@ void HeaderView::render(const AppState &state) {
 
 void EventView::render(const AppState &state) {
   werase(win);
+  wmove(win, 0, 0);
+  if(state.is_typing()) {
+    static const char *prompt = "Enter event description > ";
+    wprintw(win, prompt);
+    wprintw(win, state.typing_buffer.c_str());
+    move(start_y, start_x + strlen(prompt) + state.typing_buffer.size());
+  } else {
+    wprintw(win, "Press 'a' to add event.");
+  }
+
   struct tm t = state.get_selected_date();
   const std::vector<AppState::Event> &v = state.get_events(t);
   for (int i = 0; i < (int)v.size(); i++) {
     log_printf("Drawing event %d...", v[i].id);
-    mvwprintw(win, i, 0, "(%d) %s", v[i].id, v[i].description.c_str());
+    mvwprintw(win, i+2, 0, "(%d) %s", v[i].id, v[i].description.c_str());
   }
   wnoutrefresh(win);
 }

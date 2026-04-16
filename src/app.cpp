@@ -5,9 +5,9 @@
 #include <memory.h>
 #include <ncurses.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 Application::Application() {
   int logfile = open(LOG_FILENAME, O_CREAT | O_TRUNC | O_WRONLY, 0640);
@@ -61,59 +61,103 @@ void Application::recompute_layout() {
 
   views.push_back(std::make_unique<HeaderView>(0, 0, header_h, COLS));
   views.push_back(
-      std::make_unique<CalendarView>(header_h, 0, table_h, COLS / 2));
+      std::make_unique<CalendarView>(header_h, 0, table_h, COLS));
+
+  int events_y = header_h + table_h;
   views.push_back(
-      std::make_unique<EventView>(header_h + table_h, 0, events_h, COLS));
-  views.push_back(std::make_unique<FooterView>(header_h + table_h + events_h, 0,
-                                               footer_h, COLS));
+      std::make_unique<EventView>(events_y, 0, events_h, COLS));
+
+  int footer_y = header_h + table_h + events_h;
+  views.push_back(std::make_unique<FooterView>(footer_y, 0, footer_h, COLS));
+}
+
+void Application::render() {
+  for (auto &view : views) {
+    view->render(state);
+  }
+  doupdate();
+}
+
+void Application::handle_input_typing(int ch) {
+  log_printf("Key: %d (typing)", ch);
+  if (ch == KEY_ENTER || ch == '\n' || ch == '\r') {
+    curs_set(0);
+    state.set_typing_off();
+  } else if (isprint(ch)) {
+    state.typing_buffer += ch;
+  }
+}
+
+void Application::handle_input_actions(int ch) {
+  struct tm tmp;
+
+  switch (ch) {
+  case 't':
+    state.jump_to_date(state.get_today());
+    break;
+  case KEY_UP:
+  case 'k':
+    state.move(AppState::TOP);
+    break;
+  case KEY_DOWN:
+  case 'j':
+    state.move(AppState::BOTTOM);
+    break;
+  case KEY_LEFT:
+  case 'h':
+    state.move(AppState::LEFT);
+    break;
+  case KEY_RIGHT:
+  case 'l':
+    state.move(AppState::RIGHT);
+    break;
+  case 'q':
+    state.quit();
+    break;
+  case 'a':
+    curs_set(1);
+    state.set_typing_on();
+    state.typing_buffer = "";
+    break;
+  case 'H':
+    state.selected_entry_index -=
+        (state.selected_entry_index % AppState::CALENDAR_NUM_COLS);
+    break;
+  case 'L':
+    state.selected_entry_index +=
+        AppState::CALENDAR_NUM_COLS - 1 -
+        (state.selected_entry_index % AppState::CALENDAR_NUM_COLS);
+    break;
+  case 'J':
+    state.view_next_month_with_same_selection();
+    break;
+  case 'K':
+    state.view_prev_month_with_same_selection();
+    break;
+  }
+}
+
+void Application::handle_input() {
+  int ch = getch();
+  if (ch == KEY_RESIZE) {
+    recompute_layout();
+    return;
+  } else if (ch == KEY_F(1)) {
+    return; // exit
+  }
+
+  if (state.is_typing()) {
+    handle_input_typing(ch);
+  } else {
+    handle_input_actions(ch);
+  }
 }
 
 void Application::run() {
   if (views.empty())
     recompute_layout();
   while (state.is_running()) {
-    for (auto &view : views) {
-      view->render(state);
-    }
-    doupdate();
-    int ch = getch();
-    if (ch == KEY_RESIZE) {
-      recompute_layout();
-      continue;
-    } else if (ch == KEY_F(1)) {
-      return; // exit
-    }
-
-    if (state.is_typing()) {
-      // Handle typing
-    } else {
-      switch (ch) {
-      case 't':
-        state.jump_to_date(state.get_today());
-        break;
-      case KEY_UP:
-      case 'k':
-        state.move(AppState::TOP);
-        break;
-      case KEY_DOWN:
-      case 'j':
-        state.move(AppState::BOTTOM);
-        break;
-      case KEY_LEFT:
-      case 'h':
-        state.move(AppState::LEFT);
-        break;
-      case KEY_RIGHT:
-      case 'l':
-        state.move(AppState::RIGHT);
-        break;
-      case 'q':
-        state.quit();
-        break;
-      case 'a':
-        state.insert_event("New Event");
-        break;
-      }
-    }
+    render();
+    handle_input();
   }
 }
