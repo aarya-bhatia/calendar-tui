@@ -1,6 +1,11 @@
 #include "app_state.h"
 #include "util.h"
+#include <dirent.h>
+#include <fstream>
+#include <regex>
+#include <sstream>
 #include <string.h>
+#include <string>
 
 AppState::AppState() {
   refresh_today_date();
@@ -37,11 +42,9 @@ void AppState::move(MoveDir dir) {
   }
 }
 
-void AppState::jump_to_date(struct tm date) {
-  update_selection(date);
-}
+void AppState::jump_to_date(struct tm date) { update_selection(date); }
 
-void AppState::insert_event(const std::string& description) {
+void AppState::insert_event(const std::string &description) {
   add_event(get_selected_date(), description);
 }
 
@@ -137,6 +140,7 @@ long AppState::get_map_key(const struct tm &date) {
 void AppState::add_event(struct tm t, std::string description) {
   long key = get_map_key(t);
   events[key].emplace_back(events[key].size() + 1, description);
+  save_event(t, events[key].back());
 }
 
 void AppState::remove_event(struct tm t, int id) {
@@ -152,10 +156,60 @@ void AppState::remove_event(struct tm t, int id) {
   }
 }
 
-const std::vector<AppState::Event> &AppState::get_events(const struct tm &date) const {
-    static const std::vector<Event> empty;
-    long key = get_map_key(date);
-    auto it = events.find(key);
-    if (it == events.end()) return empty;
-    return it->second;
+const std::vector<AppState::Event> &
+AppState::get_events(const struct tm &date) const {
+  static const std::vector<Event> empty;
+  long key = get_map_key(date);
+  auto it = events.find(key);
+  if (it == events.end())
+    return empty;
+  return it->second;
+}
+
+void AppState::save_event(struct tm date, Event &e) {
+  long key = AppState::get_map_key(date);
+  time_t timestamp;
+  time(&timestamp);
+  std::string filename = std::string(DATA_DIRECTORY) + "/" +
+                         std::to_string(key) + "_" + std::to_string(timestamp);
+
+  std::ofstream file(filename);
+
+  if (file.is_open()) {
+    file << e.description << std::endl;
+    file.close();
+    log_printf("saved event to file %s", filename.c_str());
+  } else {
+    log_printf("failed to open file %s", filename.c_str());
+  }
+}
+
+void AppState::load_events() {
+  DIR *dirp = opendir(DATA_DIRECTORY);
+  if (!dirp) {
+    perror("opendir");
+    return;
+  }
+  struct dirent *entry;
+  std::regex pattern("(\\d+)_\\d");
+  while ((entry = readdir(dirp)) != NULL) {
+    const char *filename = entry->d_name;
+    std::string filename_s = std::string(filename);
+    std::smatch matches;
+    if (std::regex_search(filename_s, matches, pattern) && matches.size() > 1) {
+      std::string key_s = matches.str(1);
+      long key = std::stol(key_s);
+      std::ifstream file(std::string(DATA_DIRECTORY) + "/" + filename_s);
+      std::stringstream buffer;
+      buffer << file.rdbuf();
+      std::string description = buffer.str();
+      if (description.size() > 0 &&
+          description[description.size() - 1] == '\n') {
+        description.pop_back();
+      }
+      log_printf("Loaded event %ld: %s", key, description.c_str());
+      events[key].emplace_back(events[key].size() + 1, description);
+    }
+  }
+  closedir(dirp);
 }

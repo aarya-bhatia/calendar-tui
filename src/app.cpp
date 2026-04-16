@@ -6,8 +6,14 @@
 #include <ncurses.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 Application::Application() {
+  int logfile = open(LOG_FILENAME, O_CREAT | O_TRUNC | O_WRONLY, 0640);
+  dup2(logfile, 2);
+  close(logfile);
+
   setlocale(LC_ALL, "");
   initscr();
   cbreak();
@@ -27,9 +33,12 @@ Application::Application() {
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
   }
 
-  int logfile = open(LOG_FILENAME, O_CREAT | O_TRUNC | O_WRONLY, 0640);
-  dup2(logfile, 2);
-  close(logfile);
+  if (mkdir(DATA_DIRECTORY, 0777) < 0) {
+    perror("mkdir");
+  } else {
+    log_printf("created data directory: %s", DATA_DIRECTORY);
+  }
+  state.load_events();
 }
 
 Application::~Application() { endwin(); }

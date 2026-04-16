@@ -4,6 +4,8 @@
 #include <vector>
 #include <time.h>
 
+#define DATA_DIRECTORY "data/"
+
 struct AppState {
   AppState();
   ~AppState();
@@ -29,13 +31,14 @@ struct AppState {
   };
   const std::vector<Event>& get_events(const struct tm &date) const;
 
+  void load_events();
+  void save_event(struct tm date, Event &e);
+
   // Constants
   static const int CALENDAR_NUM_ROWS = 6;
   static const int CALENDAR_NUM_COLS = 7;
   static const int CALENDAR_NUM_ENTRIES = CALENDAR_NUM_ROWS * CALENDAR_NUM_COLS;
 
-  // These stay public for now if the View needs direct access to date math, 
-  // but they could be moved to private if we provide better abstractions.
   struct tm get_entry_date(int index) const;
   struct tm get_selected_date() const;
 
