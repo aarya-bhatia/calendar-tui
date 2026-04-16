@@ -94,12 +94,19 @@ void EventView::render(const AppState &state) {
   werase(win);
   wmove(win, 0, 0);
   if(state.is_typing()) {
-    static const char *prompt = "Enter event description > ";
-    wprintw(win, prompt);
-    wprintw(win, state.typing_buffer.c_str());
-    move(start_y, start_x + strlen(prompt) + state.typing_buffer.size());
+    if(state.event_edit_mode == AppState::ADD_EVENT) {
+      static const char *prompt = "[INSERT] Enter event description (or leave blank) > ";
+      wprintw(win, prompt);
+      wprintw(win, state.typing_buffer.c_str());
+      move(start_y, start_x + strlen(prompt) + state.typing_buffer.size());
+    } else {
+      static const char *prompt = "[DELETE] Enter event ID (or leave blank) > ";
+      wprintw(win, prompt);
+      wprintw(win, state.typing_buffer.c_str());
+      move(start_y, start_x + strlen(prompt) + state.typing_buffer.size());
+    }
   } else {
-    wprintw(win, "Press 'a' to add event.");
+    wprintw(win, "Press a to add event, d to delete event.");
   }
 
   struct tm t = state.get_selected_date();

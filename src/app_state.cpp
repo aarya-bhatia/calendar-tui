@@ -150,6 +150,7 @@ long AppState::get_map_key(const struct tm &date) {
 }
 
 void AppState::add_event(struct tm t, std::string description) {
+  log_printf("Adding event: %s", description.c_str());
   long key = get_map_key(t);
   events[key].emplace_back(events[key].size() + 1, description);
   save_event(t, events[key].back());
@@ -159,6 +160,7 @@ void AppState::remove_event(struct tm t, int id) {
   std::vector<Event> &v = events[get_map_key(t)];
   for (auto it = v.begin(); it != v.end(); it++) {
     if (it->id == id) {
+      log_printf("Deleting event: %s", it->description.c_str());
       it = v.erase(it);
       break;
     }

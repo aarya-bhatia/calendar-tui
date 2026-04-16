@@ -18,7 +18,12 @@ struct AppState {
   void set_typing_off() { 
     typing = false; 
     if(!typing_buffer.empty()) {
-      add_event(get_selected_date(), typing_buffer);
+      if(event_edit_mode == ADD_EVENT) {
+        add_event(get_selected_date(), typing_buffer);
+      } else {
+        int id = std::stoi(typing_buffer);
+        remove_event(get_selected_date(), id);
+      }
     }
   }
 
@@ -57,9 +62,10 @@ struct AppState {
   struct tm get_entry_date(int index) const;
   struct tm get_selected_date() const;
 
+  enum {ADD_EVENT, DELETE_EVENT} event_edit_mode;
   std::string typing_buffer = "";
-  int selected_entry_index = 0;
 
+  int selected_entry_index = 0;
   void update_selection(struct tm new_selection_date);
 
 private:

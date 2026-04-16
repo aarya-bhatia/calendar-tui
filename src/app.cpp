@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#define CTRL(c) ((c) & 0x1F)
+
 Application::Application() {
   int logfile = open(LOG_FILENAME, O_CREAT | O_TRUNC | O_WRONLY, 0640);
   dup2(logfile, 2);
@@ -60,12 +62,10 @@ void Application::recompute_layout() {
   int events_h = LINES - header_h - table_h - footer_h;
 
   views.push_back(std::make_unique<HeaderView>(0, 0, header_h, COLS));
-  views.push_back(
-      std::make_unique<CalendarView>(header_h, 0, table_h, COLS));
+  views.push_back(std::make_unique<CalendarView>(header_h, 0, table_h, COLS));
 
   int events_y = header_h + table_h;
-  views.push_back(
-      std::make_unique<EventView>(events_y, 0, events_h, COLS));
+  views.push_back(std::make_unique<EventView>(events_y, 0, events_h, COLS));
 
   int footer_y = header_h + table_h + events_h;
   views.push_back(std::make_unique<FooterView>(footer_y, 0, footer_h, COLS));
@@ -83,14 +83,17 @@ void Application::handle_input_typing(int ch) {
   if (ch == KEY_ENTER || ch == '\n' || ch == '\r') {
     curs_set(0);
     state.set_typing_off();
+  } else if(ch == KEY_BACKSPACE) {
+    state.typing_buffer.pop_back();
+  } else if(ch == CTRL('u')) {
+    state.typing_buffer = "";
+    state.typing_buffer.pop_back();
   } else if (isprint(ch)) {
     state.typing_buffer += ch;
   }
 }
 
 void Application::handle_input_actions(int ch) {
-  struct tm tmp;
-
   switch (ch) {
   case 't':
     state.jump_to_date(state.get_today());
@@ -118,6 +121,13 @@ void Application::handle_input_actions(int ch) {
     curs_set(1);
     state.set_typing_on();
     state.typing_buffer = "";
+    state.event_edit_mode = AppState::ADD_EVENT;
+    break;
+  case 'd':
+    curs_set(1);
+    state.set_typing_on();
+    state.typing_buffer = "";
+    state.event_edit_mode = AppState::DELETE_EVENT;
     break;
   case 'H':
     state.selected_entry_index -=
