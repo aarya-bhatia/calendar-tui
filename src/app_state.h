@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <time.h>
+#include "util.h"
 
 #define DATA_DIRECTORY "data/"
 
@@ -21,8 +22,12 @@ struct AppState {
       if(event_edit_mode == ADD_EVENT) {
         add_event(get_selected_date(), typing_buffer);
       } else {
-        int id = std::stoi(typing_buffer);
-        remove_event(get_selected_date(), id);
+        try {
+          int id = atoi(typing_buffer.c_str());
+          remove_event(get_selected_date(), id);
+        } catch(std::exception e) {
+          log_printf("ERROR: %s", e.what());
+        }
       }
     }
   }

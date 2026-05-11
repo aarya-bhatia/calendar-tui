@@ -59,7 +59,7 @@ void Application::recompute_layout() {
 
   log_printf("screen size: %d x %d", LINES, COLS);
 
-  int header_h = 4;
+  int header_h = 3;
   int footer_h = 1;
   int table_h = 14;
   int events_h = LINES - header_h - table_h - footer_h;

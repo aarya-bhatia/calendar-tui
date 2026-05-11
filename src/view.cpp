@@ -80,14 +80,14 @@ void FooterView::render(const AppState &state) {
 void HeaderView::render(const AppState &state) {
   werase(win);
 
-  wattron(win, COLOR_PAIR(1));
-  mvwprintw(win, 0, 0, "[h] help [hjklHJKL] navigate [q] quit [t] go to today");
-  wattroff(win, COLOR_PAIR(1));
+  // wattron(win, COLOR_PAIR(1));
+  // mvwprintw(win, 0, 0, "[h] help [hjklHJKL] navigate [q] quit [t] go to today");
+  // wattroff(win, COLOR_PAIR(1));
 
   const char *month_name = MONTH_NAMES[state.get_view_month().tm_mon];
 
   wattron(win, A_BOLD);
-  mvwprintw(win, 2, 0, "%s %04d", month_name,
+  mvwprintw(win, 0, 0, "%s %04d", month_name,
             1900 + state.get_view_month().tm_year);
   wattroff(win, A_BOLD);
 
