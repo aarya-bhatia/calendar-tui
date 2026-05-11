@@ -1,6 +1,6 @@
+#include "app_state.h"
 #include "util.h"
 #include "view.h"
-#include "app_state.h"
 #include <assert.h>
 #include <ncurses.h>
 
@@ -10,6 +10,10 @@ CalendarView::CalendarView(int y, int x, int h, int w) : View(y, x, h, w) {
 
   assert(cellh >= 1);
   assert(cellw >= 1);
+
+  log_printf("calendar view initialized with y:%d,x:%d,h:%d,w:%d and "
+             "cellh:%d,cellw:%d",
+             start_y, start_x, height, width, cellh, cellw);
 }
 
 void CalendarView::render(const AppState &state) {
@@ -49,7 +53,8 @@ void CalendarView::render(const AppState &state) {
         mvwprintw(win, entry_y, entry_x, "%d", entry_date.tm_mday);
       }
 
-      if(has_events) wprintw(win, "\u002a");
+      if (has_events)
+        wprintw(win, "\u002a");
     }
   }
   wnoutrefresh(win);
@@ -66,8 +71,7 @@ void FooterView::render(const AppState &state) {
   struct tm selected = state.get_selected_date();
 
   mvwprintw(win, 0, 1, " Date Selected: %04d/%02d/%02d",
-            1900 + selected.tm_year, selected.tm_mon + 1,
-            selected.tm_mday);
+            1900 + selected.tm_year, selected.tm_mon + 1, selected.tm_mday);
 
   wattroff(win, COLOR_PAIR(FOOTER_COLOR) | A_BOLD);
   wnoutrefresh(win);
@@ -83,19 +87,20 @@ void HeaderView::render(const AppState &state) {
   const char *month_name = MONTH_NAMES[state.get_view_month().tm_mon];
 
   wattron(win, A_BOLD);
-  mvwprintw(win, 2, 0, "%s %04d", month_name, 1900 + state.get_view_month().tm_year);
+  mvwprintw(win, 2, 0, "%s %04d", month_name,
+            1900 + state.get_view_month().tm_year);
   wattroff(win, A_BOLD);
 
   wnoutrefresh(win);
 }
 
-
 void EventView::render(const AppState &state) {
   werase(win);
   wmove(win, 0, 0);
-  if(state.is_typing()) {
-    if(state.event_edit_mode == AppState::ADD_EVENT) {
-      static const char *prompt = "[INSERT] Enter event description (or leave blank) > ";
+  if (state.is_typing()) {
+    if (state.event_edit_mode == AppState::ADD_EVENT) {
+      static const char *prompt =
+          "[INSERT] Enter event description (or leave blank) > ";
       wprintw(win, prompt);
       wprintw(win, state.typing_buffer.c_str());
       move(start_y, start_x + strlen(prompt) + state.typing_buffer.size());
@@ -113,7 +118,7 @@ void EventView::render(const AppState &state) {
   const std::vector<AppState::Event> &v = state.get_events(t);
   for (int i = 0; i < (int)v.size(); i++) {
     log_printf("Drawing event %d...", v[i].id);
-    mvwprintw(win, i+2, 0, "(%d) %s", v[i].id, v[i].description.c_str());
+    mvwprintw(win, i + 2, 0, "(%d) %s", v[i].id, v[i].description.c_str());
   }
   wnoutrefresh(win);
 }

@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #define CTRL(c) ((c) & 0x1F)
+#define MAX_CALENDAR_WIDTH 50
 
 Application::Application() {
   int logfile = open(LOG_FILENAME, O_CREAT | O_TRUNC | O_WRONLY, 0640);
@@ -56,13 +57,16 @@ void Application::recompute_layout() {
     return;
   }
 
+  log_printf("screen size: %d x %d", LINES, COLS);
+
   int header_h = 4;
   int footer_h = 1;
   int table_h = 14;
   int events_h = LINES - header_h - table_h - footer_h;
 
   views.push_back(std::make_unique<HeaderView>(0, 0, header_h, COLS));
-  views.push_back(std::make_unique<CalendarView>(header_h, 0, table_h, COLS));
+  views.push_back(std::make_unique<CalendarView>(
+      header_h, 0, table_h, std::min(MAX_CALENDAR_WIDTH, COLS)));
 
   int events_y = header_h + table_h;
   views.push_back(std::make_unique<EventView>(events_y, 0, events_h, COLS));
@@ -83,9 +87,9 @@ void Application::handle_input_typing(int ch) {
   if (ch == KEY_ENTER || ch == '\n' || ch == '\r') {
     curs_set(0);
     state.set_typing_off();
-  } else if(ch == KEY_BACKSPACE) {
+  } else if (ch == KEY_BACKSPACE) {
     state.typing_buffer.pop_back();
-  } else if(ch == CTRL('u')) {
+  } else if (ch == CTRL('u')) {
     state.typing_buffer = "";
     state.typing_buffer.pop_back();
   } else if (isprint(ch)) {
